@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.datasets.samples_generator import make_blobs
+from sklearn.metrics.pairwise import pairwise_distances
 from kmedoids import KMedoids
 
 def plot_graphs(data, clusters):
@@ -15,28 +16,19 @@ def plot_graphs(data, clusters):
     plt.title('Cluster formations')
     plt.show()
 
-def get_distance_matrix(data):
-    return np.array([
-        [
-            np.linalg.norm(data[i]-data[j])
-            for j in range(len(data))
-        ]
-        for i in range(len(data))
-    ])
-
 def main():
     # generate random points
     X, _ = make_blobs(n_samples=100, centers=3)
 
     # compute distance matrix
-    dist = get_distance_matrix(X)
+    dist = pairwise_distances(X, metric='euclidean')
 
     # k-medoids algorithm
     km = KMedoids(distance_matrix=dist, n_clusters=3)
     km.run(max_iterations=10, tolerance=0.00001)
 
     print(km.clusters)
-    plot_graphs(X, km.clusters);
+    plot_graphs(X, km.clusters)
 
 if __name__ == '__main__':
     main()
