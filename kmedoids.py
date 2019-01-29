@@ -2,10 +2,12 @@ import numpy as np
 import random
 
 class KMedoids:
-	def __init__(self, distance_matrix, n_clusters=2):
+	def __init__(self, distance_matrix, n_clusters=2, start_prob=0.80, end_prob=0.98):
 		self.distance_matrix = distance_matrix
 		self.n_clusters = n_clusters
 		self.n_points = len(distance_matrix)
+		self.start_prob = start_prob
+		self.end_prob = end_prob
 		self.clusters = None
 		self.medoids = None
 
@@ -14,7 +16,11 @@ class KMedoids:
 		medoids = [random.randint(0, self.n_points - 1)]
 		while len(medoids) != self.n_clusters:
 			distances = [self.get_closest_medoid(medoids, point)[1] for point in range(self.n_points)]
-			medoids.append(np.argmax(distances))
+			distances_index = np.argsort(distances)
+			start_index = round(self.start_prob * len(distances_index))
+			end_index = round(self.end_prob * (len(distances_index) - 1))
+			new_medoid = distances_index[random.randint(start_index, end_index)]
+			medoids.append(new_medoid)
 		return medoids
 
 	def get_distance(self, point1, point2):
@@ -60,11 +66,11 @@ class KMedoids:
 		# 		3.1- For each medoid m, for each non-medoid data point o:
 		# 				3.1.1- Swap m and o, associate each data point to the closest medoid, recompute the cost (sum of distances of points to their medoid)
 		#				3.1.2- If the total cost of the configuration increased in the previous step, undo the swap
-		return
 		cost_change = float('inf')
 		current_cost = self.get_configuration_cost(self.medoids, self.clusters)
 		for epoch in range(max_iterations):
 			if cost_change > tolerance:
+				cost_change = 0
 				for m in self.medoids:
 					for o in self.get_non_medoids(self.medoids, self.clusters):
 						new_medoids = [o] + [med for med in self.medoids if med != m]
@@ -73,6 +79,8 @@ class KMedoids:
 						if new_cost < current_cost:
 							self.medoids = new_medoids
 							self.clusters = new_clusters
+							cost_change = current_cost - new_cost
+							current_cost = new_cost
 							break
 			else:
 				break
