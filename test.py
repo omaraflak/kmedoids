@@ -16,16 +16,28 @@ def plot_graphs(data, clusters):
     plt.title('Cluster formations')
     plt.show()
 
+    medoid_data_points = []
+    for m in clusters.keys():
+        medoid_data_points.append(data[m])
+    x = [i[0] for i in data]
+    y = [i[1] for i in data]
+    x_ = [i[0] for i in medoid_data_points]
+    y_ = [i[1] for i in medoid_data_points]
+    plt.plot(x, y, 'yo')
+    plt.plot(x_, y_, 'r*')
+    plt.title('Mediods are highlighted in red')
+    plt.show()
+
 def main():
     # generate random points
-    X, _ = make_blobs(n_samples=100, centers=3)
+    X, _ = make_blobs(n_samples=300, centers=3)
 
     # compute distance matrix
     dist = pairwise_distances(X, metric='euclidean')
 
     # k-medoids algorithm
     km = KMedoids(distance_matrix=dist, n_clusters=3)
-    km.run(max_iterations=10, tolerance=0.00001)
+    km.run(max_iterations=10, tolerance=0.001)
 
     print(km.clusters)
     plot_graphs(X, km.clusters)
