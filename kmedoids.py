@@ -10,7 +10,12 @@ class KMedoids:
 		self.medoids = None
 
 	def initialize_medoids(self):
-		return random.sample(range(self.n_points), self.n_clusters)
+		# K-means++ initialization
+		medoids = [random.randint(0, self.n_points - 1)]
+		while len(medoids) != self.n_clusters:
+			distances = [self.get_closest_medoid(medoids, point)[0] for point in range(self.n_points)]
+			medoids.append(np.argmax(distances))
+		return medoids
 
 	def get_distance(self, point1, point2):
 		return self.distance_matrix[point1][point2]
