@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.datasets.samples_generator import make_blobs
 from sklearn.metrics.pairwise import pairwise_distances
-from kmedoids import KMedoids
+from constrained_kmedoids import KMedoids
 
 def plot_graphs(data, clusters):
     colors = {0:'b*', 1:'g^',2:'ro',3:'c*', 4:'m^', 5:'yo', 6:'ko', 7:'w*'}
@@ -30,13 +30,13 @@ def plot_graphs(data, clusters):
 
 def main():
     # generate random points
-    X, _ = make_blobs(n_samples=300, centers=3)
+    X, _ = make_blobs(n_samples=18, centers=4)
 
     # compute distance matrix
     dist = pairwise_distances(X, metric='euclidean')
 
     # k-medoids algorithm
-    km = KMedoids(distance_matrix=dist, n_clusters=3)
+    km = KMedoids(distance_matrix=dist, n_clusters=4)
     km.run(max_iterations=10, tolerance=0.001)
 
     print(km.clusters)
