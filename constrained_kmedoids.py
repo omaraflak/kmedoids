@@ -7,7 +7,9 @@ import numpy as np
 class KMedoids:
     def __init__(self, distance_matrix, n_clusters=2, start_prob=0.90, end_prob=0.99):
         if not 0 <= start_prob < end_prob <= 1:
-            raise ValueError('start_prob must be smaller than end_prob')
+            raise ValueError('start_prob must be smaller than end_prob.')
+        if not n_clusters < len(distance_matrix):
+            raise ValueError('number of clusters must not exceed number of data points.')
 
         self.distance_matrix = distance_matrix
         self.n_clusters = n_clusters
