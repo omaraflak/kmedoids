@@ -1,3 +1,6 @@
+"""
+This version of KMedoids gives equally sized clusters (will not be optimal).
+"""
 import numpy as np
 import random
 
