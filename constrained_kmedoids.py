@@ -5,7 +5,7 @@ import numpy as np
 import random
 
 class KMedoids:
-	def __init__(self, distance_matrix, n_clusters=2, start_prob=0.80, end_prob=0.98):
+	def __init__(self, distance_matrix, n_clusters=2, start_prob=0.90, end_prob=1.0):
 		self.distance_matrix = distance_matrix
 		self.n_clusters = n_clusters
 		self.n_points = len(distance_matrix)
@@ -18,11 +18,15 @@ class KMedoids:
 		# K-means++ initialization
 		medoids = [random.randint(0, self.n_points - 1)]
 		while len(medoids) != self.n_clusters:
-			distances = [self.get_closest_medoid(medoids, point)[1] for point in range(self.n_points)]
-			distances_index = np.argsort(distances)
-			start_index = round(self.start_prob * len(distances_index))
-			end_index = round(self.end_prob * (len(distances_index) - 1))
-			new_medoid = distances_index[random.randint(start_index, end_index)]
+			distances = np.array([
+				[point, self.get_closest_medoid(medoids, point)[1]]
+				for point in range(self.n_points)
+				if point not in medoids
+			])
+			distances_sorted = distances[distances[:,1].argsort()]
+			start_index = round(self.start_prob * len(distances_sorted))
+			end_index = round(self.end_prob * (len(distances_sorted) - 1))
+			new_medoid = int(distances_sorted[random.randint(start_index, end_index)][0])
 			medoids.append(new_medoid)
 		return medoids
 
