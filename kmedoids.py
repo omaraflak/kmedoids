@@ -39,7 +39,7 @@ class KMedoids:
 		return closest_medoid, closest_distance
 
 	def associate_points_to_closest_medoid(self, medoids):
-		clusters = {medoid: [] for medoid in medoids}
+		clusters = {medoid: [medoid] for medoid in medoids}
 		for point in range(self.n_points):
 			medoid, _ = self.get_closest_medoid(medoids, point)
 			clusters[medoid].append(point)
