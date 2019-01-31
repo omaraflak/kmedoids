@@ -14,6 +14,7 @@ class KMedoids:
         self.distance_matrix = distance_matrix
         self.n_clusters = n_clusters
         self.n_points = len(distance_matrix)
+        self.n_range = set(range(self.n_points))
         self.start_prob = start_prob
         self.end_prob = end_prob
         self.clusters = None
@@ -21,18 +22,18 @@ class KMedoids:
 
     def initialize_medoids(self):
         # K-means++ initialization
-        medoids = [random.randint(0, self.n_points - 1)] # nosec
+        medoids = {random.randint(0, self.n_points - 1)} # nosec
         while len(medoids) != self.n_clusters:
             distances = np.array([
                 [point, self.get_closest_medoid(medoids, point)[1]]
-                for point in range(self.n_points)
+                for point in self.n_range
                 if point not in medoids
             ])
             distances_sorted = distances[distances[:, 1].argsort()]
             start_index = int(self.start_prob * len(distances))
             end_index = round(self.end_prob * (len(distances) - 1))
             new_medoid = int(distances_sorted[random.randint(start_index, end_index)][0]) # nosec
-            medoids.append(new_medoid)
+            medoids.add(new_medoid)
         return medoids
 
     def get_distance(self, point1, point2):
@@ -54,7 +55,7 @@ class KMedoids:
         closest_point = None
         closest_distance = float('inf')
 
-        points = [p for p in range(self.n_points) if p not in exception]
+        points = self.n_range - exception
         for point in points:
             distance = self.get_distance(point, medoid)
             if distance < closest_distance:
@@ -64,15 +65,15 @@ class KMedoids:
         return closest_point, closest_distance
 
     def associate_medoids_to_closest_point(self, medoids):
-        clusters = {medoid: [medoid] for medoid in medoids}
-        already_associated_points = [medoid for medoid in medoids]
+        clusters = {medoid: {medoid} for medoid in medoids}
+        already_associated_points = set(medoids)
         associated_points = len(medoids)
         while associated_points != self.n_points:
             for medoid in medoids:
                 point, _ = self.get_closest_point(medoid, already_associated_points)
                 if point is not None:
-                    clusters[medoid].append(point)
-                    already_associated_points.append(point)
+                    clusters[medoid].add(point)
+                    already_associated_points.add(point)
                     associated_points += 1
         return clusters
 
@@ -82,8 +83,8 @@ class KMedoids:
     def get_configuration_cost(self, medoids, clusters):
         return np.sum([self.get_medoid_cost(medoid, clusters) for medoid in medoids])
 
-    def get_non_medoids(self, medoids, clusters):
-        return [pt for points in clusters.values() for pt in points if pt not in medoids]
+    def get_non_medoids(self, medoids):
+        return self.n_range - medoids
 
     def run(self, max_iterations=10, tolerance=0.01):
         # 1- Initialize: select k of the n data points as the medoids.
@@ -103,8 +104,8 @@ class KMedoids:
             if cost_change > tolerance:
                 cost_change = 0
                 for m in self.medoids:
-                    for o in self.get_non_medoids(self.medoids, self.clusters):
-                        new_medoids = [o] + [med for med in self.medoids if med != m]
+                    for o in self.get_non_medoids(self.medoids):
+                        new_medoids = {o} | (self.medoids - {m})
                         new_clusters = self.associate_medoids_to_closest_point(new_medoids)
                         new_cost = self.get_configuration_cost(new_medoids, new_clusters)
                         if new_cost < current_cost:
@@ -115,3 +116,4 @@ class KMedoids:
                             break
             else:
                 break
+
