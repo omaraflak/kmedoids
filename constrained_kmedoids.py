@@ -66,22 +66,24 @@ class KMedoids:
 
     def associate_medoids_to_closest_point(self, medoids):
         clusters = {medoid: {medoid} for medoid in medoids}
+        clusters_costs = {medoid: 0 for medoid in medoids}
         already_associated_points = set(medoids)
         associated_points = len(medoids)
+
         while associated_points != self.n_points:
             for medoid in medoids:
-                point, _ = self.get_closest_point(medoid, already_associated_points)
+                point, distance = self.get_closest_point(medoid, already_associated_points)
                 if point is not None:
                     clusters[medoid].add(point)
+                    clusters_costs[medoid] += distance
                     already_associated_points.add(point)
                     associated_points += 1
-        return clusters
 
-    def get_medoid_cost(self, medoid, clusters):
-        return np.mean([self.get_distance(point, medoid) for point in clusters[medoid]])
-
-    def get_configuration_cost(self, medoids, clusters):
-        return np.sum([self.get_medoid_cost(medoid, clusters) for medoid in medoids])
+        configuration_cost = np.sum([
+            cost/len(clusters[medoid])
+            for medoid, cost in clusters_costs.items()
+        ])
+        return clusters, configuration_cost
 
     def get_non_medoids(self, medoids):
         return self.n_range - medoids
@@ -91,7 +93,7 @@ class KMedoids:
         self.medoids = self.initialize_medoids()
 
         # 2- Associate each medoid to the closest data point.
-        self.clusters = self.associate_medoids_to_closest_point(self.medoids)
+        self.clusters, current_cost = self.associate_medoids_to_closest_point(self.medoids)
 
         # 3- While the cost of the configuration decreases:
         # 3.1- For each medoid m, for each non-medoid data point o:
@@ -99,15 +101,13 @@ class KMedoids:
         #        recompute the cost (sum of distances of points to their medoid)
         # 3.1.2- If the total cost of the configuration increased in the previous step, undo the swap
         cost_change = float('inf')
-        current_cost = self.get_configuration_cost(self.medoids, self.clusters)
         for _ in range(max_iterations):
             if cost_change > tolerance:
                 cost_change = 0
                 for m in self.medoids:
                     for o in self.get_non_medoids(self.medoids):
                         new_medoids = {o} | (self.medoids - {m})
-                        new_clusters = self.associate_medoids_to_closest_point(new_medoids)
-                        new_cost = self.get_configuration_cost(new_medoids, new_clusters)
+                        new_clusters, new_cost = self.associate_medoids_to_closest_point(new_medoids)
                         if new_cost < current_cost:
                             self.medoids = new_medoids
                             self.clusters = new_clusters
@@ -116,4 +116,3 @@ class KMedoids:
                             break
             else:
                 break
-
