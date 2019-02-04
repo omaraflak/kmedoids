@@ -1,4 +1,4 @@
-# K-Medoids Equally Sized Clusters
+# K-Medoids
 This is an implementation of K-Medoids clustering algorithm. It takes as input a **distance matrix**.
  
 ## Example 
